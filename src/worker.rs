@@ -240,19 +240,27 @@ fn send_window<T: Socket>(
             data: frame.to_vec(),
         })?;
 
-        // Wait a while before sending next block
-        // println!("send_window loop: block_num={}", block_num);////
-        let millis = std::time::Duration::from_millis(1);
-        std::thread::sleep(millis);
-
-        // Check whether this is a resend or delayed send
         unsafe {
+            // Wait a while before sending next block
+            // println!("send_window loop: block_num={}", block_num);////
+            static mut DELAY_MS: u64 = 1;
+            let millis = std::time::Duration::from_millis(DELAY_MS);
+            std::thread::sleep(millis);
+
+            // Check whether this is a resend
+            static mut LAST_BLOCK_NUM: u16 = 0;            
             if block_num > 1 && block_num <= LAST_BLOCK_NUM {
                 println!("*** send_window RESEND: block_num={}", block_num);
+                DELAY_MS = DELAY_MS * 2;
             }
+
+            // Check whether this is a delayed send
+            static mut LAST_TIMESTAMP: once_cell::sync::Lazy::<std::time::Instant> = 
+                once_cell::sync::Lazy::new(|| std::time::Instant::now());
             let diff_time = std::time::Instant::now() - *LAST_TIMESTAMP;
             if block_num > 1 && diff_time > Duration::from_millis(1000) {
                 println!("+++ send_window DELAY: block_num={}", block_num);
+                DELAY_MS = DELAY_MS * 2;
             }
             LAST_BLOCK_NUM = block_num;
             *LAST_TIMESTAMP = std::time::Instant::now();
@@ -264,46 +272,24 @@ fn send_window<T: Socket>(
     Ok(())
 }
 
-static mut LAST_BLOCK_NUM: u16 = 0;
-static mut LAST_TIMESTAMP: once_cell::sync::Lazy::<std::time::Instant> = 
-    once_cell::sync::Lazy::new(|| std::time::Instant::now());
-
 /* Output Log
-   Compiling tftpd v0.2.6 (/Users/Luppy/rs-tftpd-timeout)
-    Finished dev [unoptimized + debuginfo] target(s) in 1.68s
-Password:
-    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
-     Running `target/debug/tftpd -i 0.0.0.0 -p 69 -d /Users/Luppy/tftproot`
-Running TFTP Server on 0.0.0.0:69 in /Users/Luppy/tftproot
-Sending Image to 192.168.31.141:3817
-Sent Image to 192.168.31.141:3817
-Sending jh7110-star64-pine64.dtb to 192.168.31.141:2596
-Sent jh7110-star64-pine64.dtb to 192.168.31.141:2596
-Sending initrd to 192.168.31.141:2659
-+++ send_window DELAY: block_num=2246
-+++ send_window DELAY: block_num=2729
-+++ send_window DELAY: block_num=5018
-Sent initrd to 192.168.31.141:2659
-Sending Image to 192.168.31.141:3954
-+++ send_window DELAY: block_num=602
-Sent Image to 192.168.31.141:3954
-Sending jh7110-star64-pine64.dtb to 192.168.31.141:1574
-Sent jh7110-star64-pine64.dtb to 192.168.31.141:1574
-Sending initrd to 192.168.31.141:1638
-+++ send_window DELAY: block_num=1750
-+++ send_window DELAY: block_num=1841
-+++ send_window DELAY: block_num=3638
-+++ send_window DELAY: block_num=5140
-Sent initrd to 192.168.31.141:1638
-Sending Image to 192.168.31.141:3761
-Sent Image to 192.168.31.141:3761
-Sending jh7110-star64-pine64.dtb to 192.168.31.141:2530
-Sent jh7110-star64-pine64.dtb to 192.168.31.141:2530
-Sending initrd to 192.168.31.141:2594
-*** send_window RESEND: block_num=2519
-+++ send_window DELAY: block_num=2519
-+++ send_window DELAY: block_num=4325
-+++ send_window DELAY: block_num=4417
-+++ send_window DELAY: block_num=5153
-Sent initrd to 192.168.31.141:2594
+Sending Image to 192.168.31.141:3900
++++ send_window DELAY: block_num=676
+Sent Image to 192.168.31.141:3900
+Sending jh7110-star64-pine64.dtb to 192.168.31.141:2434
+Sent jh7110-star64-pine64.dtb to 192.168.31.141:2434
+Sending initrd to 192.168.31.141:2539
++++ send_window DELAY: block_num=15
++++ send_window DELAY: block_num=2366
++++ send_window DELAY: block_num=2755
++++ send_window DELAY: block_num=5012
+Sent initrd to 192.168.31.141:2539
+Sending Image to 192.168.31.141:4069
++++ send_window DELAY: block_num=795
+Sending jh7110-star64-pine64.dtb to 192.168.31.141:2647
+Sent Image to 192.168.31.141:4069
+Sent jh7110-star64-pine64.dtb to 192.168.31.141:2647
+Sending initrd to 192.168.31.141:1859
++++ send_window DELAY: block_num=61
++++ send_window DELAY: block_num=1711
 */
