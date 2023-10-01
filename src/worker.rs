@@ -1,4 +1,5 @@
 // Testing:
+// clear && cargo build && sudo cargo run -- -i 0.0.0.0 -p 69 -d "$HOME/tftproot"
 // curl -v --output initrd tftp://192.168.x.x/initrd
 
 use crate::{Packet, Socket, Window};
