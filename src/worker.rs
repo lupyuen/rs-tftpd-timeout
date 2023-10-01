@@ -240,6 +240,7 @@ fn send_window<T: Socket>(
             data: frame.to_vec(),
         })?;
 
+        // Wait a while before sending next block
         // println!("send_window loop: block_num={}", block_num);////
         let millis = std::time::Duration::from_millis(1);////
         std::thread::sleep(millis);////
