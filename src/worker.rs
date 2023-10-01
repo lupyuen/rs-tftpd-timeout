@@ -242,11 +242,21 @@ fn send_window<T: Socket>(
 
         // Wait a while before sending next block
         // println!("send_window loop: block_num={}", block_num);////
-        let millis = std::time::Duration::from_millis(1);////
-        std::thread::sleep(millis);////
+        let millis = std::time::Duration::from_millis(1);
+        std::thread::sleep(millis);
+
+        // Check whether this is a resend
+        unsafe {
+            if block_num > 1 && block_num <= LAST_BLOCK_NUM {
+                println!("*** send_window RESEND: block_num={}", block_num);
+            }
+            LAST_BLOCK_NUM = block_num;
+        }
 
         block_num = block_num.wrapping_add(1);
     }
 
     Ok(())
 }
+
+static mut LAST_BLOCK_NUM: u16 = 0;
