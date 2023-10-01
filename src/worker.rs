@@ -137,6 +137,7 @@ impl<T: Socket + ?Sized> Worker<T> {
             let filled = window.fill()?;
 
             let mut retry_cnt = 0;
+            // println!("timeout={} ms", self.timeout.as_millis());//// 5000 ms
             let mut time = Instant::now() - (self.timeout + TIMEOUT_BUFFER);
             loop {
                 if time.elapsed() >= self.timeout {
@@ -251,7 +252,7 @@ fn send_window<T: Socket>(
             static mut LAST_BLOCK_NUM: u16 = 0;            
             if block_num > 1 && block_num <= LAST_BLOCK_NUM {
                 println!("*** send_window RESEND: block_num={}", block_num);
-                DELAY_MS = DELAY_MS * 2;
+                // DELAY_MS = DELAY_MS * 2;
             }
 
             // Check whether this is a delayed send
@@ -260,7 +261,7 @@ fn send_window<T: Socket>(
             let diff_time = std::time::Instant::now() - *LAST_TIMESTAMP;
             if block_num > 1 && diff_time > Duration::from_millis(1000) {
                 println!("+++ send_window DELAY: block_num={}", block_num);
-                DELAY_MS = DELAY_MS * 2;
+                // DELAY_MS = DELAY_MS * 2;
             }
             LAST_BLOCK_NUM = block_num;
             *LAST_TIMESTAMP = std::time::Instant::now();
