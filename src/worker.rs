@@ -1,3 +1,6 @@
+// Testing:
+// curl -v --output initrd tftp://192.168.x.x/initrd
+
 use crate::{Packet, Socket, Window};
 use std::{
     error::Error,
@@ -229,11 +232,13 @@ fn send_window<T: Socket>(
     window: &Window,
     mut block_num: u16,
 ) -> Result<(), Box<dyn Error>> {
+    println!("send_window: block_num={}", block_num);////
     for frame in window.get_elements() {
         socket.send(&Packet::Data {
             block_num,
             data: frame.to_vec(),
         })?;
+        println!("send_window loop: block_num={}", block_num);////
         block_num = block_num.wrapping_add(1);
     }
 
