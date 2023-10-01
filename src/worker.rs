@@ -233,13 +233,17 @@ fn send_window<T: Socket>(
     window: &Window,
     mut block_num: u16,
 ) -> Result<(), Box<dyn Error>> {
-    println!("send_window: block_num={}", block_num);////
+    // println!("send_window: block_num={}", block_num);////
     for frame in window.get_elements() {
         socket.send(&Packet::Data {
             block_num,
             data: frame.to_vec(),
         })?;
-        println!("send_window loop: block_num={}", block_num);////
+
+        // println!("send_window loop: block_num={}", block_num);////
+        let millis = std::time::Duration::from_millis(1);////
+        std::thread::sleep(millis);////
+
         block_num = block_num.wrapping_add(1);
     }
 
