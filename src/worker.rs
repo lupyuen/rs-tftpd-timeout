@@ -241,37 +241,16 @@ fn send_window<T: Socket>(
             data: frame.to_vec(),
         })?;
 
-        unsafe {
-            // Wait a while before sending the same block
-            // println!("send_window loop: block_num={}", block_num);////
-            static mut DELAY_MS: u64 = 1;
-            let millis = std::time::Duration::from_millis(DELAY_MS);
-            std::thread::sleep(millis);
+        // Wait a while before sending the same block
+        std::thread::sleep(
+            Duration::from_millis(1)
+        );
 
-            // Send the same block again (Why does this work?)
-            socket.send(&Packet::Data {
-                block_num,
-                data: frame.to_vec(),
-            })?;
-    
-            // Check whether this is a resend
-            static mut LAST_BLOCK_NUM: u16 = 0;            
-            if block_num > 1 && block_num <= LAST_BLOCK_NUM {
-                println!("*** send_window RESEND: block_num={}", block_num);
-                // DELAY_MS = DELAY_MS * 2;
-            }
-
-            // Check whether this is a delayed send
-            static mut LAST_TIMESTAMP: once_cell::sync::Lazy::<std::time::Instant> = 
-                once_cell::sync::Lazy::new(|| std::time::Instant::now());
-            let diff_time = std::time::Instant::now() - *LAST_TIMESTAMP;
-            if block_num > 1 && diff_time > Duration::from_millis(1000) {
-                println!("+++ send_window DELAY: block_num={}", block_num);
-                // DELAY_MS = DELAY_MS * 2;
-            }
-            LAST_BLOCK_NUM = block_num;
-            *LAST_TIMESTAMP = std::time::Instant::now();
-        }
+        // Send the same block again (Why does this work?)
+        socket.send(&Packet::Data {
+            block_num,
+            data: frame.to_vec(),
+        })?;
 
         block_num = block_num.wrapping_add(1);
     }
